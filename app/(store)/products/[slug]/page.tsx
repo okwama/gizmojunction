@@ -122,12 +122,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Product Images */}
                     <div>
-                        <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
+                        <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
                             {images[0] ? (
                                 <Image
                                     src={images[0].url}
                                     alt={images[0].alt_text || p.name}
                                     fill
+                                    sizes="(max-width: 768px) 100vw, 50vw"
                                     className="object-cover"
                                     priority
                                 />
@@ -141,11 +142,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         {images.length > 1 && (
                             <div className="grid grid-cols-4 gap-3">
                                 {images.map((image: any) => (
-                                    <div key={image.id} className="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-75">
+                                    <div key={image.id} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-75">
                                         <Image
                                             src={image.url}
                                             alt={image.alt_text || p.name}
                                             fill
+                                            sizes="(max-width: 768px) 25vw, 15vw"
                                             className="object-cover"
                                         />
                                     </div>

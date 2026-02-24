@@ -39,6 +39,7 @@ export default function BrandMarquee() {
                                 alt={brand.name}
                                 width={128}
                                 height={48}
+                                style={{ width: 'auto', height: 'auto' }}
                                 className="max-w-full max-h-full object-contain dark:invert"
                             />
                         </div>
@@ -51,6 +52,7 @@ export default function BrandMarquee() {
                                 alt={brand.name}
                                 width={128}
                                 height={48}
+                                style={{ width: 'auto', height: 'auto' }}
                                 className="max-w-full max-h-full object-contain dark:invert"
                             />
                         </div>
@@ -66,6 +68,7 @@ export default function BrandMarquee() {
                                 alt={brand.name}
                                 width={128}
                                 height={48}
+                                style={{ width: 'auto', height: 'auto' }}
                                 className="max-w-full max-h-full object-contain dark:invert"
                             />
                         </div>
@@ -77,6 +80,7 @@ export default function BrandMarquee() {
                                 alt={brand.name}
                                 width={128}
                                 height={48}
+                                style={{ width: 'auto', height: 'auto' }}
                                 className="max-w-full max-h-full object-contain dark:invert"
                             />
                         </div>

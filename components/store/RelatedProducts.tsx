@@ -37,6 +37,7 @@ export default async function RelatedProducts({ productId }: { productId: string
                                     src={product.product_images[0].url}
                                     alt={product.name}
                                     fill
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                                     className="object-cover group-hover:scale-110 transition duration-700"
                                 />
                             ) : (

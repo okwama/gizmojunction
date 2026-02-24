@@ -72,6 +72,7 @@ export default function FlashSale() {
                                 alt="Premium Headphones"
                                 width={400}
                                 height={300}
+                                style={{ width: 'auto', height: 'auto' }}
                                 className="object-cover rounded-2xl shadow-xl transform group-hover:rotate-3 transition-transform duration-500"
                             />
                             <div className="absolute -top-4 -right-4 bg-yellow-400 text-slate-900 w-24 h-24 rounded-full flex flex-col items-center justify-center font-black rotate-12 shadow-xl ring-8 ring-blue-600">
