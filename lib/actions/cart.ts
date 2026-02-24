@@ -139,3 +139,9 @@ export async function getCart() {
 
     return cart;
 }
+
+export async function updateCartEmail(email: string) {
+    const cartId = await getOrCreateCartId();
+    const supabase = await createClient();
+    await supabase.from('carts').update({ email }).eq('id', cartId);
+}

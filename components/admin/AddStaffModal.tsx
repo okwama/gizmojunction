@@ -67,7 +67,7 @@ export default function AddStaffModal({ roles }: AddStaffModalProps) {
 
                 <div className="mb-6">
                     <h2 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white">Add New Staff</h2>
-                    <p className="text-neutral-500 font-medium text-sm mt-1">Expand your team's capabilities.</p>
+                    <p className="text-neutral-500 font-medium text-sm mt-1">Expand your team&apos;s capabilities.</p>
                 </div>
 
                 {/* Mode Toggles */}
@@ -76,8 +76,8 @@ export default function AddStaffModal({ roles }: AddStaffModalProps) {
                         type="button"
                         onClick={() => setMode('invite')}
                         className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${mode === 'invite'
-                                ? 'bg-white dark:bg-neutral-700 shadow-sm text-blue-600'
-                                : 'text-neutral-400 hover:text-neutral-600'
+                            ? 'bg-white dark:bg-neutral-700 shadow-sm text-blue-600'
+                            : 'text-neutral-400 hover:text-neutral-600'
                             }`}
                     >
                         Send Invite
@@ -86,8 +86,8 @@ export default function AddStaffModal({ roles }: AddStaffModalProps) {
                         type="button"
                         onClick={() => setMode('create')}
                         className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${mode === 'create'
-                                ? 'bg-white dark:bg-neutral-700 shadow-sm text-blue-600'
-                                : 'text-neutral-400 hover:text-neutral-600'
+                            ? 'bg-white dark:bg-neutral-700 shadow-sm text-blue-600'
+                            : 'text-neutral-400 hover:text-neutral-600'
                             }`}
                     >
                         Direct Create

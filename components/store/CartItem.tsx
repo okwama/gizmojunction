@@ -1,7 +1,9 @@
 'use client';
 
 import { useTransition } from 'react';
+import Image from 'next/image';
 import { updateCartItemQuantity, removeFromCart } from '@/lib/actions/cart';
+import { formatPrice } from '@/lib/formatPrice';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 
 interface CartItemProps {
@@ -31,10 +33,11 @@ export default function CartItem({ item }: CartItemProps) {
         <div className="flex items-center gap-4 py-4 border-b">
             <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                 {product.product_images?.[0] ? (
-                    <img
+                    <Image
                         src={product.product_images[0].url}
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -47,7 +50,7 @@ export default function CartItem({ item }: CartItemProps) {
                 <h3 className="font-bold text-lg text-slate-900">{product.name}</h3>
                 <p className="text-sm text-slate-500">{item.variant.name}</p>
                 <div className="mt-2 text-primary-600 font-bold">
-                    ${price.toFixed(2)}
+                    {formatPrice(price)}
                 </div>
             </div>
 
@@ -80,7 +83,7 @@ export default function CartItem({ item }: CartItemProps) {
             </div>
 
             <div className="w-24 text-right font-bold text-lg text-slate-900">
-                ${total.toFixed(2)}
+                {formatPrice(total)}
             </div>
         </div>
     );

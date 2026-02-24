@@ -1,17 +1,19 @@
 import { getAdminCustomers } from '@/lib/actions/admin';
+import { formatPrice } from '@/lib/formatPrice';
 import { Users, Mail, ShoppingBag, DollarSign, Calendar, Search, Filter, ArrowRight, UserPlus, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import CSVExportButton from '@/components/admin/CSVExportButton';
 
 export default async function AdminCustomersPage() {
     const customers = await getAdminCustomers();
 
     return (
-        <div className="space-y-10">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight text-neutral-900 dark:text-white">Customer Base</h1>
-                    <p className="text-neutral-500 font-medium mt-1">Nurture relationships and analyze user engagement.</p>
+                    <h1 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white">Customer Base</h1>
+                    <p className="text-xs text-neutral-500 font-medium mt-0.5">Nurture relationships and analyze user engagement.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -26,37 +28,37 @@ export default async function AdminCustomersPage() {
             </div>
 
             {/* Metrics Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-blue-500/10 text-blue-600 rounded-2xl">
-                            <Users className="w-6 h-6" />
+                        <div className="p-2.5 bg-blue-500/10 text-blue-600 rounded-xl">
+                            <Users className="w-5 h-5" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Total Users</p>
-                            <h3 className="text-2xl font-black mt-1">{customers.length}</h3>
+                            <h3 className="text-xl font-black mt-0.5">{customers.length}</h3>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-emerald-500/10 text-emerald-600 rounded-2xl">
-                            <ShoppingBag className="w-6 h-6" />
+                        <div className="p-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl">
+                            <ShoppingBag className="w-5 h-5" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Active Buyers</p>
-                            <h3 className="text-2xl font-black mt-1">{customers.filter(c => c.orderCount > 0).length}</h3>
+                            <h3 className="text-xl font-black mt-0.5">{customers.filter(c => c.orderCount > 0).length}</h3>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-violet-500/10 text-violet-600 rounded-2xl">
-                            <DollarSign className="w-6 h-6" />
+                        <div className="p-2.5 bg-violet-500/10 text-violet-600 rounded-xl">
+                            <DollarSign className="w-5 h-5" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Avg. Basket</p>
-                            <h3 className="text-2xl font-black mt-1">$423.50</h3>
+                            <h3 className="text-xl font-black mt-0.5">$423.50</h3>
                         </div>
                     </div>
                 </div>
@@ -76,23 +78,24 @@ export default async function AdminCustomersPage() {
                         <Filter className="w-4 h-4" />
                         Segment
                     </button>
-                    <button className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-neutral-50 transition-all text-neutral-400">
-                        Export CSV
-                    </button>
+                    <CSVExportButton
+                        data={customers}
+                        filename={`gizmo_customers_${new Date().toISOString().split('T')[0]}`}
+                    />
                 </div>
             </div>
 
             {/* Customers Table */}
-            <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-neutral-100 dark:border-neutral-800">
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Customer Profile</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Joined</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Orders</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Total Spend</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 text-right">Action</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Customer Profile</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Joined</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Orders</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Total Spend</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-50 dark:divide-neutral-800">
@@ -126,7 +129,7 @@ export default async function AdminCustomersPage() {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <span className="font-black text-sm text-emerald-600">${Number(customer.totalSpend).toFixed(2)}</span>
+                                        <span className="font-black text-sm text-emerald-600">{formatPrice(Number(customer.totalSpend))}</span>
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <Link

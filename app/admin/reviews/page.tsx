@@ -6,12 +6,12 @@ export default async function AdminReviewsPage() {
     const reviews = await getAdminReviews();
 
     return (
-        <div className="space-y-10">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight text-neutral-900 dark:text-white">Review Queue</h1>
-                    <p className="text-neutral-500 font-medium mt-1">Moderate customer feedback and maintain brand integrity.</p>
+                    <h1 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white">Review Queue</h1>
+                    <p className="text-xs text-neutral-500 font-medium mt-0.5">Moderate customer feedback and maintain brand integrity.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -33,13 +33,13 @@ export default async function AdminReviewsPage() {
                     { label: 'Average Rating', value: (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length || 0).toFixed(1), color: 'text-violet-500', bg: 'bg-violet-500/10' },
                     { label: 'Flagged Content', value: 0, color: 'text-red-500', bg: 'bg-red-500/10' },
                 ].map((stat) => (
-                    <div key={stat.label} className="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 flex items-center gap-4">
-                        <div className={`p-3 ${stat.bg} ${stat.color} rounded-xl`}>
-                            <Star className="w-5 h-5 fill-current" />
+                    <div key={stat.label} className="bg-white dark:bg-neutral-900 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+                        <div className={`p-2 ${stat.bg} ${stat.color} rounded-lg`}>
+                            <Star className="w-4 h-4 fill-current" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest">{stat.label}</p>
-                            <h3 className="text-xl font-black">{stat.value}</h3>
+                            <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest leading-none">{stat.label}</p>
+                            <h3 className="text-lg font-black mt-1 leading-none">{stat.value}</h3>
                         </div>
                     </div>
                 ))}
@@ -51,7 +51,7 @@ export default async function AdminReviewsPage() {
                     <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 p-20 text-center">
                         <MessageSquare className="w-12 h-12 text-neutral-200 mx-auto mb-4" />
                         <h3 className="text-xl font-bold">No feedback recorded yet</h3>
-                        <p className="text-neutral-500 mt-2">The conversation with your customers hasn't started.</p>
+                        <p className="text-neutral-500 mt-2">The conversation with your customers hasn&apos;t started.</p>
                     </div>
                 ) : (
                     reviews.map((review: any) => (
@@ -90,7 +90,7 @@ export default async function AdminReviewsPage() {
                                 {/* Review Content */}
                                 <div className="flex-1 space-y-4">
                                     <div>
-                                        <h3 className="text-xl font-black text-neutral-900 dark:text-white leading-tight">"{review.title}"</h3>
+                                        <h3 className="text-xl font-black text-neutral-900 dark:text-white leading-tight">&quot;{review.title}&quot;</h3>
                                         <p className="text-neutral-600 dark:text-neutral-400 mt-3 leading-relaxed text-sm">
                                             {review.comment}
                                         </p>

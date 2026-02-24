@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { formatPrice } from '@/lib/formatPrice';
 import { Package, Plus, Search, Filter, Upload } from 'lucide-react';
 import ProductsTable from '@/components/admin/ProductsTable';
 
 export default async function AdminProductsPage({
     searchParams,
 }: {
-    searchParams: { search?: string; category?: string; brand?: string; status?: string };
+    searchParams: Promise<{ search?: string; category?: string; brand?: string; status?: string }>;
 }) {
+    const params = await searchParams;
     const supabase = await createClient();
 
     // Build query
@@ -29,20 +31,20 @@ export default async function AdminProductsPage({
         .order('created_at', { ascending: false });
 
     // Apply filters
-    if (searchParams.search) {
-        query = query.ilike('name', `%${searchParams.search}%`);
+    if (params.search) {
+        query = query.ilike('name', `%${params.search}%`);
     }
-    if (searchParams.category) {
-        query = query.eq('category_id', searchParams.category);
+    if (params.category) {
+        query = query.eq('category_id', params.category);
     }
-    if (searchParams.brand) {
-        query = query.eq('brand_id', searchParams.brand);
+    if (params.brand) {
+        query = query.eq('brand_id', params.brand);
     }
-    if (searchParams.status === 'published') {
+    if (params.status === 'published') {
         query = query.eq('is_published', true);
-    } else if (searchParams.status === 'draft') {
+    } else if (params.status === 'draft') {
         query = query.eq('is_published', false);
-    } else if (searchParams.status === 'featured') {
+    } else if (params.status === 'featured') {
         query = query.eq('featured', true);
     }
 
@@ -96,7 +98,7 @@ export default async function AdminProductsPage({
                             type="text"
                             name="search"
                             placeholder="Search products..."
-                            defaultValue={searchParams.search}
+                            defaultValue={params.search}
                             className="w-full pl-10 pr-4 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
@@ -104,7 +106,7 @@ export default async function AdminProductsPage({
                     {/* Category Filter */}
                     <select
                         name="category"
-                        defaultValue={searchParams.category || ''}
+                        defaultValue={params.category || ''}
                         className="px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">All Categories</option>
@@ -116,7 +118,7 @@ export default async function AdminProductsPage({
                     {/* Brand Filter */}
                     <select
                         name="brand"
-                        defaultValue={searchParams.brand || ''}
+                        defaultValue={params.brand || ''}
                         className="px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">All Brands</option>
@@ -128,7 +130,7 @@ export default async function AdminProductsPage({
                     {/* Status Filter */}
                     <select
                         name="status"
-                        defaultValue={searchParams.status || ''}
+                        defaultValue={params.status || ''}
                         className="px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">All Status</option>
@@ -162,81 +164,17 @@ export default async function AdminProductsPage({
                                 <th className="px-4 py-2.5 text-left text-xs font-black uppercase tracking-wider text-neutral-500">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                            {!products || products.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="px-4 py-12 text-center">
-                                        <Package className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
-                                        <p className="text-neutral-500 mb-3">No products found</p>
-                                        <Link
-                                            href="/admin/products/new"
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                            Create Product
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ) : (
-                                products.map((product: any) => (
-                                    <tr key={product.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition">
-                                        <td className="px-4 py-3">
-                                            <div>
-                                                <div className="text-sm font-bold text-neutral-900 dark:text-white">{product.name}</div>
-                                                <div className="text-xs text-neutral-500 font-mono">{product.slug}</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                                            {product.brand?.name || '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                                            {product.category?.name || '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                                            {product.variants?.[0]?.count || 0}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm font-bold text-neutral-900 dark:text-white">
-                                            ${product.base_price.toFixed(2)}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex gap-1.5">
-                                                {product.is_published ? (
-                                                    <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                                        Published
-                                                    </span>
-                                                ) : (
-                                                    <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
-                                                        Draft
-                                                    </span>
-                                                )}
-                                                {product.featured && (
-                                                    <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                                                        Featured
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            <div className="flex gap-3">
-                                                <Link
-                                                    href={`/admin/products/${product.id}`}
-                                                    className="text-blue-600 hover:text-blue-700 font-bold"
-                                                >
-                                                    Edit
-                                                </Link>
-                                                <Link
-                                                    href={`/products/${product.slug}`}
-                                                    target="_blank"
-                                                    className="text-neutral-500 hover:text-neutral-700 font-bold"
-                                                >
-                                                    View
-                                                </Link>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
+                        <ProductsTable
+                            products={products || []}
+                            categories={categories || []}
+                            brands={brands || []}
+                            activeFilters={{
+                                search: params.search,
+                                category: params.category,
+                                brand: params.brand,
+                                status: params.status
+                            }}
+                        />
                     </table>
                 </div>
             </div>

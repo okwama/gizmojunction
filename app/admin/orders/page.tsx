@@ -2,6 +2,8 @@ import { getAdminOrders } from '@/lib/actions/admin';
 import { ShoppingCart, Package, Truck, CheckCircle2, XCircle, Clock, Filter, Search, ArrowRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { updateOrderStatus } from '@/lib/actions/admin';
+import { formatPrice } from '@/lib/formatPrice';
+import CSVExportButton from '@/components/admin/CSVExportButton';
 
 export default async function AdminOrdersPage({
     searchParams,
@@ -38,12 +40,12 @@ export default async function AdminOrdersPage({
     };
 
     return (
-        <div className="space-y-10">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight text-neutral-900 dark:text-white">Order Vault</h1>
-                    <p className="text-neutral-500 font-medium mt-1">Manage and fulfill customer requests with precision.</p>
+                    <h1 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white">Order Vault</h1>
+                    <p className="text-xs text-neutral-500 font-medium mt-0.5">Manage and fulfill customer requests with precision.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -54,6 +56,10 @@ export default async function AdminOrdersPage({
                             className="pl-11 pr-4 py-2.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/20 outline-none w-64 transition-all"
                         />
                     </div>
+                    <CSVExportButton
+                        data={orders}
+                        filename={`gizmo_orders_${new Date().toISOString().split('T')[0]}`}
+                    />
                 </div>
             </div>
 
@@ -71,8 +77,8 @@ export default async function AdminOrdersPage({
                         key={item.value}
                         href={`/admin/orders?status=${item.value}`}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${status === item.value
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
-                                : 'bg-white dark:bg-neutral-900 text-neutral-500 border-neutral-200 dark:border-neutral-800 hover:border-blue-600 hover:text-blue-600'
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
+                            : 'bg-white dark:bg-neutral-900 text-neutral-500 border-neutral-200 dark:border-neutral-800 hover:border-blue-600 hover:text-blue-600'
                             }`}
                     >
                         <item.icon className="w-3.5 h-3.5" />
@@ -82,17 +88,17 @@ export default async function AdminOrdersPage({
             </div>
 
             {/* Orders Table */}
-            <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-neutral-100 dark:border-neutral-800">
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Order ID</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Date</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Customer</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Total</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Status</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 text-right">Action</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Order ID</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Date</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Customer</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Total</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Status</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-50 dark:divide-neutral-800">
@@ -136,15 +142,15 @@ export default async function AdminOrdersPage({
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <span className="font-black text-sm text-blue-600">${Number(order.total).toFixed(2)}</span>
+                                            <span className="font-black text-sm text-blue-600">{formatPrice(Number(order.total))}</span>
                                         </td>
-                                        <td className="px-8 py-6">
-                                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${getStatusStyles(order.status)}`}>
+                                        <td className="px-6 py-4">
+                                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${getStatusStyles(order.status)}`}>
                                                 <StatusIcon status={order.status} />
                                                 {order.status}
                                             </div>
                                         </td>
-                                        <td className="px-8 py-6 text-right">
+                                        <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button className="p-2 hover:bg-white dark:hover:bg-neutral-800 rounded-lg border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 transition-all text-neutral-400 hover:text-blue-600">
                                                     <ExternalLink className="w-4 h-4" />

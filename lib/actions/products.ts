@@ -154,3 +154,30 @@ export async function getFeaturedProducts() {
 
     return products;
 }
+
+export async function getProductsByIds(ids: string[]) {
+    const supabase = await createClient();
+
+    const { data: products, error } = await supabase
+        .from('products')
+        .select(`
+            id,
+            name,
+            slug,
+            description,
+            base_price,
+            brand:brands(name),
+            category:categories(name),
+            product_images(url, alt_text),
+            metadata
+        `)
+        .in('id', ids)
+        .is('deleted_at', null);
+
+    if (error) {
+        console.error('Error fetching products by ids:', error);
+        return [];
+    }
+
+    return products || [];
+}

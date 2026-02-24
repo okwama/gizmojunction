@@ -8,41 +8,41 @@ export default async function AdminTeamPage() {
     const roles = await getRoles();
 
     return (
-        <div className="space-y-10">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight text-neutral-900 dark:text-white">Staff Management</h1>
-                    <p className="text-neutral-500 font-medium mt-1">Orchestrate your team and calibrate access levels.</p>
+                    <h1 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white">Staff Management</h1>
+                    <p className="text-xs text-neutral-500 font-medium mt-0.5">Orchestrate your team and calibrate access levels.</p>
                 </div>
 
                 <AddStaffModal roles={roles} />
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                     { label: 'Administrators', value: staff.filter((s: any) => s.user_roles?.some((ur: any) => ur.roles?.name === 'admin')).length, color: 'text-blue-500', bg: 'bg-blue-500/10' },
                     { label: 'Operations Staff', value: staff.length, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
                     { label: 'Access Requests', value: 0, color: 'text-amber-500', bg: 'bg-amber-500/10' },
                 ].map((stat) => (
-                    <div key={stat.label} className="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                    <div key={stat.label} className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
                         <p className="text-[10px] font-black uppercase text-neutral-400 tracking-widest">{stat.label}</p>
-                        <h3 className="text-3xl font-black mt-2">{stat.value}</h3>
-                        <div className={`mt-4 h-1 w-12 rounded-full ${stat.bg.replace('bg-', 'bg-')}`} />
+                        <h3 className="text-xl font-black mt-1">{stat.value}</h3>
+                        <div className={`mt-3 h-1 w-8 rounded-full ${stat.bg.replace('bg-', 'bg-')}`} />
                     </div>
                 ))}
             </div>
 
             {/* Staff Table */}
-            <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-sm">
                 <table className="w-full text-left">
                     <thead>
                         <tr className="bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-100 dark:border-neutral-800">
-                            <th className="px-8 py-5 text-[10px] font-black uppercase text-neutral-400 tracking-widest">Member</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase text-neutral-400 tracking-widest">Primary Role</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase text-neutral-400 tracking-widest">Joined</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase text-neutral-400 tracking-widest text-right">Actions</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase text-neutral-400 tracking-widest">Member</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase text-neutral-400 tracking-widest">Primary Role</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase text-neutral-400 tracking-widest">Joined</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase text-neutral-400 tracking-widest text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">

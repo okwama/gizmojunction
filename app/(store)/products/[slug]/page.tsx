@@ -1,10 +1,57 @@
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
+import { formatPrice } from '@/lib/formatPrice';
 import Link from 'next/link';
 import AddToCart from '@/components/store/AddToCart';
+import ReviewSection from '@/components/store/ReviewSection';
+import StickyBuyBar from '@/components/store/StickyBuyBar';
+import WishlistButton from '@/components/store/WishlistButton';
+import RelatedProducts from '@/components/store/RelatedProducts';
+import CompareButton from '@/components/store/CompareButton';
+import type { Metadata } from 'next';
 
 interface PageProps {
     params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { slug } = await params;
+    const supabase = await createClient();
+
+    const { data: product } = await supabase
+        .from('products')
+        .select('name, description, base_price, product_images(url, alt_text)')
+        .eq('slug', slug)
+        .is('deleted_at', null)
+        .single();
+
+    if (!product) {
+        return { title: 'Product Not Found | Gizmo Junction' };
+    }
+
+    const image = (product.product_images as any[])?.[0];
+    const price = Number(product.base_price);
+    const description = product.description
+        ? `${product.description.slice(0, 155)}...`
+        : `Buy ${product.name} at KES ${price.toLocaleString()}. Shop electronics and gadgets at Gizmo Junction.`;
+
+    return {
+        title: `${product.name} | Gizmo Junction`,
+        description,
+        openGraph: {
+            title: product.name,
+            description,
+            type: 'website',
+            images: image?.url ? [{ url: image.url, alt: image.alt_text || product.name }] : [],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: product.name,
+            description,
+            images: image?.url ? [image.url] : [],
+        },
+    };
 }
 
 export default async function ProductDetailPage({ params }: PageProps) {
@@ -41,32 +88,35 @@ export default async function ProductDetailPage({ params }: PageProps) {
         notFound();
     }
 
+    // Cast joined relations (Supabase TS infers arrays, but .single() returns objects)
+    const p = product as any;
+
     // Sort images by display order
-    const images = product.product_images?.sort((a, b) =>
+    const images = (p.product_images || []).sort((a: any, b: any) =>
         (a.display_order || 0) - (b.display_order || 0)
-    ) || [];
+    );
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white text-gray-900">
             <div className="container mx-auto px-4 py-8">
                 {/* Breadcrumb */}
                 <nav className="text-sm text-gray-600 mb-8">
                     <Link href="/" className="hover:text-primary-600">Home</Link>
                     <span className="mx-2">/</span>
                     <Link href="/products" className="hover:text-primary-600">Products</Link>
-                    {product.category && (
+                    {p.category && (
                         <>
                             <span className="mx-2">/</span>
                             <Link
-                                href={`/products?category=${product.category.slug}`}
+                                href={`/products?category=${p.category.slug}`}
                                 className="hover:text-primary-600"
                             >
-                                {product.category.name}
+                                {p.category.name}
                             </Link>
                         </>
                     )}
                     <span className="mx-2">/</span>
-                    <span className="text-gray-900">{product.name}</span>
+                    <span className="text-gray-900">{p.name}</span>
                 </nav>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -74,10 +124,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <div>
                         <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
                             {images[0] ? (
-                                <img
+                                <Image
                                     src={images[0].url}
-                                    alt={images[0].alt_text || product.name}
-                                    className="w-full h-full object-cover"
+                                    alt={images[0].alt_text || p.name}
+                                    fill
+                                    className="object-cover"
+                                    priority
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -88,12 +140,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         {/* Thumbnail gallery */}
                         {images.length > 1 && (
                             <div className="grid grid-cols-4 gap-3">
-                                {images.map((image) => (
+                                {images.map((image: any) => (
                                     <div key={image.id} className="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-75">
-                                        <img
+                                        <Image
                                             src={image.url}
-                                            alt={image.alt_text || product.name}
-                                            className="w-full h-full object-cover"
+                                            alt={image.alt_text || p.name}
+                                            fill
+                                            className="object-cover"
                                         />
                                     </div>
                                 ))}
@@ -103,36 +156,36 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                     {/* Product Info */}
                     <div>
-                        {product.brand && (
+                        {p.brand && (
                             <div className="text-sm text-gray-600 mb-2">
-                                <Link href={`/products?brand=${product.brand.slug}`} className="hover:text-primary-600">
-                                    {product.brand.name}
+                                <Link href={`/products?brand=${p.brand.slug}`} className="hover:text-primary-600">
+                                    {p.brand.name}
                                 </Link>
                             </div>
                         )}
 
-                        <h1 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">{product.name}</h1>
+                        <h1 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">{p.name}</h1>
 
-                        {product.featured && (
+                        {p.featured && (
                             <div className="inline-block bg-primary-100 text-primary-700 text-sm px-3 py-1 rounded-full mb-4">
                                 ⭐ Featured Product
                             </div>
                         )}
 
                         <div className="text-3xl font-bold text-primary-600 mb-6">
-                            ${product.base_price.toFixed(2)}
+                            {formatPrice(p.base_price)}
                         </div>
 
                         <div className="prose prose-sm mb-8">
-                            <p className="text-gray-700 leading-relaxed">{product.description}</p>
+                            <p className="text-gray-700 leading-relaxed">{p.description}</p>
                         </div>
 
                         {/* Variants */}
-                        {product.product_variants && product.product_variants.length > 0 && (
+                        {p.product_variants && p.product_variants.length > 0 && (
                             <div className="mb-8">
                                 <h3 className="font-semibold mb-3">Available Options</h3>
                                 <div className="space-y-2">
-                                    {product.product_variants.map((variant) => (
+                                    {p.product_variants.map((variant: any) => (
                                         <div
                                             key={variant.id}
                                             className="flex justify-between items-center p-3 border rounded-lg hover:border-primary-600 cursor-pointer"
@@ -142,7 +195,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                                                 <div className="text-sm text-gray-600">SKU: {variant.sku}</div>
                                             </div>
                                             <div className="text-lg font-semibold text-primary-600">
-                                                ${(product.base_price + (variant.price_adjustment || 0)).toFixed(2)}
+                                                {formatPrice(p.base_price + (variant.price_adjustment || 0))}
                                             </div>
                                         </div>
                                     ))}
@@ -152,10 +205,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                         {/* Add to Cart */}
                         <div className="space-y-4">
-                            <AddToCart
-                                productId={product.id}
-                                variantId={product.product_variants?.[0]?.id}
-                            />
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <AddToCart
+                                        productId={p.id}
+                                        variantId={p.product_variants?.[0]?.id}
+                                    />
+                                </div>
+                                <WishlistButton productId={p.id} />
+                                <CompareButton productId={p.id} className="p-4" variant="icon" />
+                            </div>
                             <button className="w-full border-2 border-primary-600 text-primary-600 py-4 rounded-lg font-semibold hover:bg-primary-50 transition">
                                 Buy Now
                             </button>
@@ -167,7 +226,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Free shipping on orders over $50</span>
+                                <span>Free shipping on orders over KES 5,000</span>
                             </div>
                             <div className="flex items-center gap-3 text-gray-600">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,23 +244,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     </div>
                 </div>
 
-                {/* Reviews & Q&A Section */}
+                <RelatedProducts productId={p.id} />
+
+                {/* Reviews Section */}
                 <div className="mt-16">
                     <div className="border-t pt-12">
-                        <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
-                        <div className="bg-gray-50 rounded-xl p-8 text-center text-gray-500">
-                            No reviews yet. Be the first to review this product!
-                        </div>
-                    </div>
-
-                    <div className="border-t pt-12 mt-12">
-                        <h2 className="text-2xl font-bold mb-6">Questions & Answers</h2>
-                        <div className="bg-gray-50 rounded-xl p-8 text-center text-gray-500">
-                            No questions yet. Ask a question about this product!
-                        </div>
+                        <ReviewSection productId={p.id} />
                     </div>
                 </div>
             </div>
+
+            <StickyBuyBar product={p} />
         </div>
     );
 }
+

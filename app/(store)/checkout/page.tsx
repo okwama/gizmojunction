@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import CheckoutForm from '@/components/store/CheckoutForm';
+import { getStoreConfig } from '@/lib/actions/storeConfig';
 
 export default async function CheckoutPage() {
     const supabase = await createClient();
@@ -62,11 +63,13 @@ export default async function CheckoutPage() {
         return sum + (price * item.quantity);
     }, 0);
 
+    const storeConfig = await getStoreConfig();
+
     return (
         <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 py-16">
             <div className="container mx-auto px-4">
                 <h1 className="text-3xl font-bold mb-12">Checkout</h1>
-                <CheckoutForm cartItems={cartItems} subtotal={subtotal} initialData={initialData} />
+                <CheckoutForm cartItems={cartItems} subtotal={subtotal} initialData={initialData} storeConfig={storeConfig} />
             </div>
         </div>
     );

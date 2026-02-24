@@ -6,7 +6,20 @@ const nextConfig = {
                 protocol: 'https',
                 hostname: 'vvxkpqrzbusyrblgbzgr.supabase.co',
             },
+            {
+                protocol: 'https',
+                hostname: 'images.unsplash.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'upload.wikimedia.org',
+            },
         ],
+    },
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '5mb',
+        },
     },
 };
 

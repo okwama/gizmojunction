@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getCart } from '@/lib/actions/cart';
+import { getStoreConfig } from '@/lib/actions/storeConfig';
+import { formatPrice } from '@/lib/formatPrice';
 import Link from 'next/link';
 import { ShoppingCart, User, Globe, ChevronDown, Menu, LogOut } from 'lucide-react';
 import SearchBar from '@/components/store/SearchBar';
@@ -10,11 +12,23 @@ export default async function TopHeader() {
 
     const { data: categories } = await supabase
         .from('categories')
-        .select('id, name, slug')
+        .select(`
+            id, 
+            name, 
+            slug,
+            subcategories:categories(id, name, slug)
+        `)
         .is('parent_id', null)
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .order('name');
+
+    const { data: topBrands } = await supabase
+        .from('brands')
+        .select('id, name, slug')
+        .limit(6);
 
     const cart = await getCart();
+    const config = await getStoreConfig();
     const cartItemsCount = cart?.cart_items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
     const cartTotal = cart?.cart_items?.reduce((sum: number, item: any) => {
         const price = item.variant.product.base_price + (item.variant.price_adjustment || 0);
@@ -24,9 +38,14 @@ export default async function TopHeader() {
     return (
         <div className="flex flex-col w-full">
             {/* Layer 1: Announcement Banner */}
-            <div className="bg-blue-600 text-white py-2 text-center text-xs sm:text-sm font-medium">
-                Free shipping on all orders over $99! Shop our latest spring deals now.
-            </div>
+            {(config.promo_bar_enabled !== false) && (
+                <div
+                    className="py-2 text-center text-xs sm:text-sm font-medium text-white"
+                    style={{ backgroundColor: (config.promo_bar_bg_color as string) || '#2563eb' }}
+                >
+                    {(config.promo_bar_text as string) || 'Free shipping on all orders over KES 9,900! Shop our latest deals now.'}
+                </div>
+            )}
 
             {/* Layer 2: Utility Bar */}
             <div className="bg-neutral-50 dark:bg-neutral-900 border-b py-2 text-xs text-neutral-600 dark:text-neutral-400">
@@ -38,14 +57,15 @@ export default async function TopHeader() {
                             <ChevronDown className="w-3 h-3" />
                         </div>
                         <div className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition">
-                            <span>USD</span>
+                            <span>KES</span>
                             <ChevronDown className="w-3 h-3" />
                         </div>
                     </div>
                     <div className="flex items-center gap-6">
-                        <Link href="/support/contact" className="hover:text-blue-600 transition">Contact Us</Link>
-                        <Link href="/support/faqs" className="hover:text-blue-600 transition">FAQs</Link>
-                        <Link href="/support/shipping-policy" className="hover:text-blue-600 transition">Shipping</Link>
+                        <Link href="/support/contact" className="hover:text-blue-600 transition text-[10px] uppercase font-black tracking-widest">Contact Us</Link>
+                        <Link href="/support/faqs" className="hover:text-blue-600 transition text-[10px] uppercase font-black tracking-widest">FAQs</Link>
+                        <Link href="/support/shipping-policy" className="hover:text-blue-600 transition text-[10px] uppercase font-black tracking-widest">Shipping</Link>
+                        <Link href="/support/returns-exchanges" className="hover:text-blue-600 transition text-[10px] uppercase font-black tracking-widest">Returns</Link>
                     </div>
                 </div>
             </div>
@@ -100,7 +120,7 @@ export default async function TopHeader() {
                             </div>
                             <div className="hidden sm:block text-left">
                                 <div className="text-[10px] text-neutral-500 uppercase font-bold">My Cart</div>
-                                <div className="text-sm font-bold text-neutral-800 dark:text-neutral-200">${cartTotal.toFixed(2)}</div>
+                                <div className="text-sm font-bold text-neutral-800 dark:text-neutral-200">{formatPrice(cartTotal)}</div>
                             </div>
                         </Link>
 
@@ -116,49 +136,94 @@ export default async function TopHeader() {
             </div>
 
             {/* Layer 4: Mega Menu Nav */}
-            <div className="bg-white dark:bg-black border-b sticky top-0 z-50">
+            <div className="sticky top-0 z-50 glass">
                 <div className="container mx-auto px-4">
-                    <nav className="flex items-center h-12 gap-8 text-sm font-bold uppercase tracking-wide">
+                    <nav className="flex items-center h-12 gap-8 text-[11px] font-black uppercase tracking-[0.15em]">
                         <div className="group relative h-full flex items-center">
                             <Link href="/products" className="flex items-center gap-1 hover:text-blue-600 transition">
                                 Shop All Products
                                 <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
                             </Link>
                             {/* Mega Menu Dropdown */}
-                            <div className="invisible group-hover:visible absolute top-full left-0 w-[500%] max-w-[80vw] bg-white dark:bg-neutral-900 shadow-2xl border transition-all transform origin-top scale-y-95 group-hover:scale-y-100 opacity-0 group-hover:opacity-100 p-8 grid grid-cols-4 gap-8 z-50">
-                                <div className="col-span-3 grid grid-cols-3 gap-8">
-                                    {categories?.map((cat) => (
+                            <div className="invisible group-hover:visible absolute top-full left-0 w-[600px] bg-white dark:bg-neutral-900 shadow-2xl border border-neutral-100 dark:border-neutral-800 transition-all transform origin-top scale-y-95 group-hover:scale-y-100 opacity-0 group-hover:opacity-100 p-8 grid grid-cols-3 gap-8 z-50 rounded-b-2xl">
+                                <div className="col-span-2 grid grid-cols-2 gap-8">
+                                    {categories?.slice(0, 4).map((cat: any) => (
                                         <div key={cat.id}>
-                                            <Link href={`/products?category=${cat.slug}`} className="block font-bold text-blue-600 mb-4 hover:underline">
+                                            <Link href={`/products?category=${cat.slug}`} className="block font-black text-blue-600 mb-3 hover:underline text-[10px] tracking-widest">
                                                 {cat.name}
                                             </Link>
-                                            {/* We could fetch subcategories here if needed */}
-                                            <ul className="space-y-2 text-xs text-neutral-600 dark:text-neutral-400 font-medium normal-case">
-                                                <li><Link href={`/products?category=${cat.slug}&type=latest`} className="hover:text-blue-500">Latest Models</Link></li>
-                                                <li><Link href={`/products?category=${cat.slug}&type=featured`} className="hover:text-blue-500">Featured Deals</Link></li>
-                                                <li><Link href={`/products?category=${cat.slug}&type=sale`} className="hover:text-blue-500">On Sale</Link></li>
+                                            <ul className="space-y-2 text-[11px] text-neutral-500 dark:text-neutral-400 font-bold normal-case">
+                                                {cat.subcategories?.slice(0, 4).map((sub: any) => (
+                                                    <li key={sub.id}>
+                                                        <Link href={`/products?category=${sub.slug}`} className="hover:text-neutral-900 dark:hover:text-white transition-colors">
+                                                            {sub.name}
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                                {cat.subcategories?.length > 4 && (
+                                                    <li>
+                                                        <Link href={`/products?category=${cat.slug}`} className="text-blue-500 hover:text-blue-600">
+                                                            + View More
+                                                        </Link>
+                                                    </li>
+                                                )}
                                             </ul>
                                         </div>
                                     ))}
                                 </div>
-                                <div className="bg-neutral-100 dark:bg-neutral-800 p-6 rounded-xl flex flex-col justify-between">
-                                    <div>
-                                        <h4 className="text-blue-600 font-black text-xl mb-2 italic underline text-shadow-sm">Spring Sale!</h4>
-                                        <p className="text-xs normal-case text-neutral-500">Get up to 40% off on select accessories this week only.</p>
+                                <div className="bg-neutral-50 dark:bg-neutral-800/50 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800">
+                                    <h4 className="text-neutral-900 dark:text-white font-black text-[10px] uppercase tracking-[0.2em] mb-4">Top Brands</h4>
+                                    <ul className="space-y-3">
+                                        {topBrands?.map((brand) => (
+                                            <li key={brand.id}>
+                                                <Link
+                                                    href={`/products?brand=${brand.slug}`}
+                                                    className="flex items-center justify-between group/brand"
+                                                >
+                                                    <span className="text-[11px] font-bold text-neutral-500 group-hover/brand:text-blue-600 transition-colors">{brand.name}</span>
+                                                    <ChevronDown className="w-3 h-3 text-neutral-300 -rotate-90 group-hover/brand:text-blue-600 transition-colors" />
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <div className="mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                                        <Link
+                                            href="/products?sale=true"
+                                            className="block w-full py-3 bg-blue-600 text-white text-center rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-700 transition shadow-lg shadow-blue-600/20"
+                                        >
+                                            Spring Deals
+                                        </Link>
                                     </div>
-                                    <Link href="/products?sale=true" className="inline-block py-2 bg-blue-600 text-white text-center rounded-lg text-xs">View Deals</Link>
                                 </div>
                             </div>
                         </div>
 
-                        <Link href="/products?category=smartphones" className="hover:text-blue-600 transition">Smartphones</Link>
-                        <Link href="/products?category=laptops" className="hover:text-blue-600 transition">Laptops</Link>
-                        <Link href="/products?category=audio" className="hover:text-blue-600 transition">Audio</Link>
-                        <Link href="/products?category=gaming" className="hover:text-blue-600 transition">Gaming</Link>
+                        {/* Top level links */}
+                        {categories?.slice(0, 5).map((cat) => (
+                            <Link
+                                key={cat.id}
+                                href={`/products?category=${cat.slug}`}
+                                className="hover:text-blue-600 transition"
+                            >
+                                {cat.name}
+                            </Link>
+                        ))}
 
                         <div className="ml-auto flex items-center gap-6">
-                            <Link href="/support/contact" className="hover:text-blue-600 transition">Contact Us</Link>
-                            <Link href="/support/faqs" className="hover:text-blue-600 transition">Help Center</Link>
+                            <div className="group relative h-full flex items-center">
+                                <span className="hover:text-blue-600 transition text-[10px] cursor-pointer flex items-center gap-1">
+                                    Support
+                                    <ChevronDown className="w-3 h-3" />
+                                </span>
+                                <div className="invisible group-hover:visible absolute top-full right-0 w-48 bg-white dark:bg-neutral-900 shadow-xl border border-neutral-100 dark:border-neutral-800 p-4 z-50 rounded-b-xl">
+                                    <ul className="space-y-3">
+                                        <li><Link href="/support/contact" className="block text-[10px] font-bold text-neutral-500 hover:text-blue-600 uppercase tracking-widest">Contact Us</Link></li>
+                                        <li><Link href="/support/faqs" className="block text-[10px] font-bold text-neutral-500 hover:text-blue-600 uppercase tracking-widest">FAQs</Link></li>
+                                        <li><Link href="/support/shipping-policy" className="block text-[10px] font-bold text-neutral-500 hover:text-blue-600 uppercase tracking-widest">Shipping Policy</Link></li>
+                                        <li><Link href="/support/returns-exchanges" className="block text-[10px] font-bold text-neutral-500 hover:text-blue-600 uppercase tracking-widest">Returns</Link></li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </nav>
                 </div>

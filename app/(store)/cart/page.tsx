@@ -1,5 +1,6 @@
 import { getCart } from '@/lib/actions/cart';
 import CartItem from '@/components/store/CartItem';
+import { formatPrice } from '@/lib/formatPrice';
 import Link from 'next/link';
 
 export default async function CartPage() {
@@ -61,7 +62,7 @@ export default async function CartPage() {
                             <div className="space-y-3 text-slate-600 mb-6 font-medium">
                                 <div className="flex justify-between">
                                     <span>Subtotal</span>
-                                    <span className="text-slate-900">${subtotal.toFixed(2)}</span>
+                                    <span className="text-slate-900">{formatPrice(subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Shipping</span>
@@ -76,7 +77,7 @@ export default async function CartPage() {
                             <div className="border-t pt-4 mb-6">
                                 <div className="flex justify-between font-bold text-xl text-slate-900">
                                     <span>Total</span>
-                                    <span>${subtotal.toFixed(2)}</span>
+                                    <span>{formatPrice(subtotal)}</span>
                                 </div>
                             </div>
 

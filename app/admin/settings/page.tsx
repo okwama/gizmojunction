@@ -1,37 +1,40 @@
 import { getAuditLogs } from '@/lib/actions/admin';
+import { getStoreConfig } from '@/lib/actions/storeConfig';
+import StorefrontConfig from '@/components/admin/StorefrontConfig';
+import PaymentConfig from '@/components/admin/PaymentConfig';
 import { Settings, Shield, Bell, Database, HardDrive, Cpu, Terminal, History, ChevronRight, Lock, Globe, Save, CreditCard, Truck, Smartphone } from 'lucide-react';
 
 export default async function AdminSettingsPage() {
     // We'll mock some settings for now, but fetch real audit logs
-    const auditLogs = await getAuditLogs().catch(() => []); // Fallback if table doesn't exist yet
+    const auditLogs = await getAuditLogs().catch(() => []);
+    const storeConfig = await getStoreConfig(); // Fallback if table doesn't exist yet
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight text-neutral-900 dark:text-white">System Forge</h1>
-                    <p className="text-neutral-500 font-medium mt-1">Configure the engine and track administrative trajectory.</p>
+                    <h1 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white">System Forge</h1>
+                    <p className="text-xs text-neutral-500 font-medium mt-0.5">Configure the engine and track administrative trajectory.</p>
                 </div>
 
-                <button className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-black shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all">
-                    <Save className="w-4 h-4" />
-                    Save Configuration
-                </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Column: Settings Categories */}
-                <div className="lg:col-span-2 space-y-8">
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Storefront Configuration */}
+                    <StorefrontConfig initialConfig={storeConfig} />
+
                     {/* General Settings */}
                     <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
-                        <div className="p-8 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
+                        <div className="p-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
                             <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-lg">
                                 <Globe className="w-5 h-5" />
                             </div>
                             <h3 className="text-xl font-black">Store Environment</h3>
                         </div>
-                        <div className="p-8 space-y-6">
+                        <div className="p-6 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-xs font-black uppercase text-neutral-500 tracking-widest">Store Name</label>
@@ -56,73 +59,17 @@ export default async function AdminSettingsPage() {
                     </div>
 
                     {/* Payment Configuration */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
-                        <div className="p-8 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
-                            <div className="p-2 bg-green-50 dark:bg-green-900/30 text-green-600 rounded-lg">
-                                <CreditCard className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-xl font-black">Payment Gateways</h3>
-                        </div>
-                        <div className="p-8 space-y-6">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between p-4 border border-neutral-100 dark:border-neutral-800 rounded-xl">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
-                                            <Truck className="w-5 h-5 text-neutral-600" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold">Cash on Delivery</h4>
-                                            <p className="text-xs text-neutral-500">Pay upon receipt</p>
-                                        </div>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" className="sr-only peer" defaultChecked />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 border border-neutral-100 dark:border-neutral-800 rounded-xl">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                            <Smartphone className="w-5 h-5 text-green-600" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold">M-Pesa (Manual)</h4>
-                                            <p className="text-xs text-neutral-500">Paybill / Till Number</p>
-                                        </div>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" className="sr-only peer" defaultChecked />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                                <h4 className="text-sm font-bold mb-3">M-Pesa Configuration</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-black uppercase text-neutral-500 tracking-widest">Paybill Number</label>
-                                        <input className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 border-2 border-transparent focus:border-blue-600 rounded-xl outline-none transition-all text-sm font-bold" placeholder="e.g. 123456" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-black uppercase text-neutral-500 tracking-widest">Account Name</label>
-                                        <input className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 border-2 border-transparent focus:border-blue-600 rounded-xl outline-none transition-all text-sm font-bold" defaultValue="Gizmo Junction" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <PaymentConfig initialConfig={storeConfig} />
 
                     {/* Infrastructure Monitor */}
                     <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
-                        <div className="p-8 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
+                        <div className="p-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
                             <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-lg">
                                 <Cpu className="w-5 h-5" />
                             </div>
                             <h3 className="text-xl font-black">Infrastructure Health</h3>
                         </div>
-                        <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[
                                 { label: 'Database', status: 'Optimal', icon: Database, color: 'text-emerald-500' },
                                 { label: 'Storage', status: '82% Free', icon: HardDrive, color: 'text-blue-500' },

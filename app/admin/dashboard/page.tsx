@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { formatPrice } from '@/lib/formatPrice';
 import {
     Package,
     ShoppingCart,
@@ -11,6 +12,9 @@ import {
     Box
 } from 'lucide-react';
 import Link from 'next/link';
+import CSVExportButton from '@/components/admin/CSVExportButton';
+import DashboardCharts from '@/components/admin/DashboardCharts';
+import { getDashboardAnalytics, getTopProducts } from '@/lib/actions/admin';
 
 export default async function AdminDashboard() {
     const supabase = await createClient();
@@ -31,6 +35,15 @@ export default async function AdminDashboard() {
         .order('created_at', { ascending: false })
         .limit(5);
 
+    const [analyticsData, topProductsData] = await Promise.all([
+        getDashboardAnalytics(),
+        getTopProducts(),
+    ]);
+
+    // Calculate total revenue from analytics
+    const totalRevenue = analyticsData.reduce((sum, d) => sum + d.revenue, 0);
+    const totalOrders = analyticsData.reduce((sum, d) => sum + d.orders, 0);
+
     const stats = [
         {
             name: 'Total Products',
@@ -50,11 +63,11 @@ export default async function AdminDashboard() {
         },
         {
             name: 'Total Revenue',
-            value: '$12,450.00',
+            value: formatPrice(totalRevenue),
             icon: DollarSign,
             color: 'bg-violet-500',
             trend: '+8.2%',
-            desc: 'Gross income'
+            desc: 'Last 30 days'
         },
         {
             name: 'New Customers',
@@ -67,29 +80,29 @@ export default async function AdminDashboard() {
     ];
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-6">
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight text-neutral-900 dark:text-white">Dashboard Overview</h1>
-                    <p className="text-neutral-500 font-medium mt-1">Real-time performance metrics for Gizmo Junction.</p>
+                    <h1 className="text-2xl font-black tracking-tight text-neutral-900 dark:text-white">Dashboard Overview</h1>
+                    <p className="text-xs text-neutral-500 font-medium mt-0.5">Real-time performance metrics for Gizmo Junction.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-bold shadow-sm hover:bg-neutral-50 transition-all">
                         <Filter className="w-4 h-4" />
                         Filter
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all">
-                        <TrendingUp className="w-4 h-4" />
-                        Generate Report
-                    </button>
+                    <CSVExportButton
+                        data={stats.map(({ icon, ...rest }) => rest)}
+                        filename={`gizmo_dashboard_report_${new Date().toISOString().split('T')[0]}`}
+                    />
                 </div>
             </div>
 
             {/* Stats Bento Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat) => (
-                    <div key={stat.name} className="group bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-xl transition-all relative overflow-hidden">
+                    <div key={stat.name} className="group bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-xl transition-all relative overflow-hidden">
                         <div className="flex justify-between items-start relative z-10">
                             <div className={`p-4 ${stat.color} rounded-2xl text-white shadow-lg`}>
                                 <stat.icon className="w-6 h-6" />
@@ -99,10 +112,10 @@ export default async function AdminDashboard() {
                                 {stat.trend}
                             </div>
                         </div>
-                        <div className="mt-6 relative z-10">
-                            <p className="text-sm font-bold text-neutral-500 uppercase tracking-wider">{stat.name}</p>
-                            <h3 className="text-3xl font-black text-neutral-900 dark:text-white mt-1">{stat.value}</h3>
-                            <p className="text-xs text-neutral-400 font-medium mt-1">{stat.desc}</p>
+                        <div className="mt-4 relative z-10">
+                            <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">{stat.name}</p>
+                            <h3 className="text-2xl font-black text-neutral-900 dark:text-white mt-0.5">{stat.value}</h3>
+                            <p className="text-[10px] text-neutral-400 font-medium mt-0.5">{stat.desc}</p>
                         </div>
                         {/* Subtle Background Pattern */}
                         <div className="absolute -bottom-4 -right-4 text-neutral-50 opacity-5 group-hover:scale-110 transition-transform">
@@ -112,16 +125,19 @@ export default async function AdminDashboard() {
                 ))}
             </div>
 
+            {/* Visual Analytics */}
+            <DashboardCharts data={analyticsData} topProducts={topProductsData} />
+
             {/* Detailed Insights Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Recent Orders Table */}
-                <div className="lg:col-span-2 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col">
-                    <div className="p-8 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                <div className="lg:col-span-2 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col">
+                    <div className="p-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
                         <div>
-                            <h3 className="text-xl font-black">Recent Orders</h3>
-                            <p className="text-sm text-neutral-500 font-medium leading-none mt-1">Monitor your latest transaction flow.</p>
+                            <h3 className="text-lg font-black">Recent Orders</h3>
+                            <p className="text-xs text-neutral-500 font-medium leading-none mt-1">Monitor your latest transaction flow.</p>
                         </div>
-                        <Link href="/admin/orders" className="text-xs font-black text-blue-600 hover:underline uppercase tracking-widest">View All Orders</Link>
+                        <Link href="/admin/orders" className="text-[10px] font-black text-blue-600 hover:underline uppercase tracking-widest">View All Orders</Link>
                     </div>
                     <div className="flex-1 overflow-x-auto">
                         <table className="w-full text-left">
@@ -145,7 +161,7 @@ export default async function AdminDashboard() {
                                                 <span className="text-sm font-bold">Anonymous Guest</span>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-5 font-black text-sm">${order.total.toFixed(2)}</td>
+                                        <td className="px-8 py-5 font-black text-sm">{formatPrice(order.total)}</td>
                                         <td className="px-8 py-5">
                                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${order.status === 'completed'
                                                 ? 'bg-emerald-500/10 text-emerald-500'
@@ -165,12 +181,12 @@ export default async function AdminDashboard() {
 
                 {/* Right Column: Activity or Analytics Mini-card */}
                 <div className="space-y-8">
-                    <div className="bg-blue-600 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl shadow-blue-500/20">
-                        <h3 className="text-2xl font-black leading-tight relative z-10">Stock Alerts!</h3>
-                        <p className="text-blue-100 text-sm font-medium mt-2 relative z-10">5 products are currently running low on stock. Take action now to avoid delays.</p>
-                        <Link href="/admin/inventory" className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-white text-blue-600 rounded-xl text-sm font-black shadow-lg relative z-10 hover:bg-neutral-50 transition-all">
+                    <div className="bg-blue-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-xl shadow-blue-500/20">
+                        <h3 className="text-xl font-black leading-tight relative z-10">Stock Alerts!</h3>
+                        <p className="text-blue-100 text-xs font-medium mt-1 relative z-10">5 products are running low. Take action now.</p>
+                        <Link href="/admin/inventory" className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-white text-blue-600 rounded-lg text-xs font-black shadow-lg relative z-10 hover:bg-neutral-50 transition-all">
                             Manage Inventory
-                            <Package className="w-4 h-4" />
+                            <Package className="w-3.5 h-3.5" />
                         </Link>
                         <Package className="absolute -bottom-8 -right-8 opacity-20 rotate-12" size={180} />
                     </div>

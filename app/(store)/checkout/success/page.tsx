@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { CheckCircle, Package, ArrowRight, ShoppingBag } from 'lucide-react';
 
-export default function OrderSuccessPage({
+export default async function OrderSuccessPage({
     searchParams
 }: {
-    searchParams: { order?: string }
+    searchParams: Promise<{ order?: string }>
 }) {
-    const orderNumber = searchParams.order;
+    const params = await searchParams;
+    const orderNumber = params.order;
 
     return (
         <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex items-center justify-center py-20 px-4">

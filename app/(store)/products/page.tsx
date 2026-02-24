@@ -1,6 +1,9 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
-import { ShoppingBag, Filter, ArrowRight } from 'lucide-react';
+import { formatPrice } from '@/lib/formatPrice';
+import { ShoppingBag, Filter, ArrowRight, ChevronRight } from 'lucide-react';
+import CompareButton from '@/components/store/CompareButton';
 
 interface Product {
     id: string;
@@ -12,6 +15,14 @@ interface Product {
     category: { name: string; slug: string } | null;
     product_images: { url: string; alt_text: string | null }[];
     featured: boolean;
+}
+
+interface Category {
+    id: string;
+    name: string;
+    slug: string;
+    parent_id: string | null;
+    children?: Category[];
 }
 
 export default async function ProductsPage({
@@ -42,7 +53,6 @@ export default async function ProductsPage({
 
     // Apply filters
     if (params.category) {
-        // Correct way to filter on joined table in query builder
         query = query.filter('category.slug', 'eq', params.category);
     }
 
@@ -64,12 +74,34 @@ export default async function ProductsPage({
         console.error('Error fetching products:', error);
     }
 
-    // Fetch all categories and brands for filters
-    const { data: categories } = await supabase
+    // Fetch ALL categories (parents + children) for hierarchy
+    const { data: allCategories } = await supabase
         .from('categories')
-        .select('id, name, slug')
+        .select('id, name, slug, parent_id')
         .is('deleted_at', null)
-        .is('parent_id', null);
+        .order('name');
+
+    // Build category tree
+    const categoryTree: Category[] = [];
+    const categoryMap = new Map<string, Category>();
+
+    allCategories?.forEach(cat => {
+        categoryMap.set(cat.id, { ...cat, children: [] });
+    });
+
+    categoryMap.forEach(cat => {
+        if (cat.parent_id && categoryMap.has(cat.parent_id)) {
+            categoryMap.get(cat.parent_id)!.children!.push(cat);
+        } else if (!cat.parent_id) {
+            categoryTree.push(cat);
+        }
+    });
+
+    // Collect all slugs under the active parent for highlighting
+    const allCategorySlugs = allCategories?.map(c => c.slug) || [];
+    const activeParent = categoryTree.find(p =>
+        p.slug === params.category || p.children?.some(c => c.slug === params.category)
+    );
 
     const { data: brands } = await supabase
         .from('brands')
@@ -99,7 +131,7 @@ export default async function ProductsPage({
                                 Filters
                             </h2>
 
-                            {/* Search (Mobile) */}
+                            {/* Search */}
                             {params.q && (
                                 <div className="mb-8">
                                     <div className="flex items-center justify-between mb-3">
@@ -112,27 +144,51 @@ export default async function ProductsPage({
                                 </div>
                             )}
 
-                            {/* Categories */}
+                            {/* Category Hierarchy */}
                             <div className="mb-8">
                                 <h3 className="font-bold text-sm uppercase tracking-wider text-neutral-500 mb-4">Categories</h3>
-                                <div className="space-y-3">
+                                <div className="space-y-1">
                                     <Link
                                         href="/products"
-                                        className={`flex items-center text-sm transition ${!params.category ? 'text-blue-600 font-bold' : 'text-neutral-600 dark:text-neutral-400 hover:text-blue-600'}`}
+                                        className={`flex items-center text-sm py-1.5 transition ${!params.category ? 'text-blue-600 font-bold' : 'text-neutral-600 dark:text-neutral-400 hover:text-blue-600'}`}
                                     >
                                         All Categories
                                         {!params.category && <div className="ml-auto w-1.5 h-1.5 bg-blue-600 rounded-full"></div>}
                                     </Link>
-                                    {categories?.map((category) => (
-                                        <Link
-                                            key={category.id}
-                                            href={`/products?category=${category.slug}`}
-                                            className={`flex items-center text-sm transition ${params.category === category.slug ? 'text-blue-600 font-bold' : 'text-neutral-600 dark:text-neutral-400 hover:text-blue-600'}`}
-                                        >
-                                            {category.name}
-                                            {params.category === category.slug && <div className="ml-auto w-1.5 h-1.5 bg-blue-600 rounded-full"></div>}
-                                        </Link>
-                                    ))}
+                                    {categoryTree.map((parent) => {
+                                        const isParentActive = params.category === parent.slug;
+                                        const hasActiveChild = parent.children?.some(c => c.slug === params.category);
+                                        const isExpanded = isParentActive || hasActiveChild;
+
+                                        return (
+                                            <div key={parent.id}>
+                                                <Link
+                                                    href={`/products?category=${parent.slug}`}
+                                                    className={`flex items-center text-sm py-1.5 transition ${isParentActive ? 'text-blue-600 font-bold' : 'text-neutral-700 dark:text-neutral-300 hover:text-blue-600'}`}
+                                                >
+                                                    {parent.children && parent.children.length > 0 && (
+                                                        <ChevronRight className={`w-3.5 h-3.5 mr-1 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                                                    )}
+                                                    {parent.name}
+                                                    {isParentActive && <div className="ml-auto w-1.5 h-1.5 bg-blue-600 rounded-full"></div>}
+                                                </Link>
+                                                {/* Subcategories — always show if parent is expanded */}
+                                                {isExpanded && parent.children && parent.children.length > 0 && (
+                                                    <div className="ml-5 mt-0.5 space-y-0.5 border-l-2 border-slate-100 dark:border-neutral-700 pl-3">
+                                                        {parent.children.map((child) => (
+                                                            <Link
+                                                                key={child.id}
+                                                                href={`/products?category=${child.slug}`}
+                                                                className={`block text-sm py-1 transition ${params.category === child.slug ? 'text-blue-600 font-bold' : 'text-neutral-500 dark:text-neutral-400 hover:text-blue-600'}`}
+                                                            >
+                                                                {child.name}
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -169,7 +225,7 @@ export default async function ProductsPage({
                                 <ShoppingBag className="w-16 h-16 text-neutral-200 mx-auto mb-6" />
                                 <h2 className="text-2xl font-bold mb-3 dark:text-white">No products found</h2>
                                 <p className="text-neutral-500 dark:text-neutral-400 mb-8 max-w-sm mx-auto">
-                                    We couldn't find any products matching your criteria. Try adjusting your filters or search query.
+                                    We couldn&apos;t find any products matching your criteria. Try adjusting your filters or search query.
                                 </p>
                                 <Link
                                     href="/products"
@@ -180,7 +236,7 @@ export default async function ProductsPage({
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
-                                {products.map((product) => (
+                                {products.map((product: any) => (
                                     <Link
                                         key={product.id}
                                         href={`/products/${product.slug}`}
@@ -188,10 +244,11 @@ export default async function ProductsPage({
                                     >
                                         <div className="aspect-[4/3] bg-neutral-50 dark:bg-neutral-950 relative overflow-hidden">
                                             {product.product_images?.[0] ? (
-                                                <img
+                                                <Image
                                                     src={product.product_images[0].url}
                                                     alt={product.product_images[0].alt_text || product.name}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                    fill
+                                                    className="object-cover group-hover:scale-110 transition-transform duration-500"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
@@ -203,6 +260,9 @@ export default async function ProductsPage({
                                                     Featured
                                                 </div>
                                             )}
+                                            <div className="absolute top-4 right-4 translate-x-2 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                                <CompareButton productId={product.id} />
+                                            </div>
                                         </div>
                                         <div className="p-6 flex-1 flex flex-col">
                                             <div className="flex justify-between items-start mb-3">
@@ -212,7 +272,7 @@ export default async function ProductsPage({
                                                     </span>
                                                 )}
                                                 <span className="font-bold text-blue-600 dark:text-blue-400">
-                                                    ${product.base_price.toFixed(2)}
+                                                    {formatPrice(product.base_price)}
                                                 </span>
                                             </div>
                                             <h3 className="font-bold text-lg mb-2 line-clamp-2 dark:text-white transition group-hover:text-blue-600">

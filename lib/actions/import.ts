@@ -272,7 +272,7 @@ export async function importProducts(
             }
 
             // Create new product
-            const { data: product, error: productError } = await supabase
+            let { data: product, error: productError } = await supabase
                 .from('products')
                 .insert({
                     name: info.productName,

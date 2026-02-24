@@ -1,5 +1,12 @@
 import Link from 'next/link';
-import { getFeaturedProducts } from '@/lib/actions/products'; // Import the action
+import Image from 'next/image';
+import { getFeaturedProducts } from '@/lib/actions/products';
+import { getStoreConfig } from '@/lib/actions/storeConfig';
+import { formatPrice } from '@/lib/formatPrice';
+import BrandMarquee from '@/components/store/BrandMarquee';
+import FlashSale from '@/components/store/FlashSale';
+import WishlistButton from '@/components/store/WishlistButton';
+import CompareButton from '@/components/store/CompareButton';
 import {
     Smartphone,
     Laptop,
@@ -17,25 +24,40 @@ import {
 } from 'lucide-react';
 
 export default async function HomePage() {
-    const featuredProducts = await getFeaturedProducts(); // Fetch data
+    const featuredProducts = await getFeaturedProducts();
+    const config = await getStoreConfig();
 
     return (
         <div className="flex flex-col min-h-screen">
-            {/* Hero Section - Always Dark */}
+            {/* Hero Section */}
             <section className="relative bg-slate-900 text-white overflow-hidden">
-                <div className="absolute inset-0 opacity-5">
-                    <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <path d="M0 100 L 100 0 L 100 100 Z" fill="white" />
-                    </svg>
-                </div>
+                {/* Configurable background image */}
+                {config.hero_image_url ? (
+                    <div className="absolute inset-0">
+                        <Image
+                            src={config.hero_image_url as string}
+                            alt="Hero"
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                        <div className="absolute inset-0 bg-slate-900/70" />
+                    </div>
+                ) : (
+                    <div className="absolute inset-0 opacity-5">
+                        <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <path d="M0 100 L 100 0 L 100 100 Z" fill="white" />
+                        </svg>
+                    </div>
+                )}
 
                 <div className="container mx-auto px-4 py-24 relative z-10">
                     <div className="max-w-4xl mx-auto text-center">
                         <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight tracking-tight">
-                            The Future of <span className="text-blue-400">Tech</span> is Here
+                            {(config.hero_title as string) || <>The Future of <span className="text-blue-400">Tech</span> is Here</>}
                         </h1>
                         <p className="text-xl md:text-2xl mb-10 text-slate-300 max-w-2xl mx-auto">
-                            Upgrade your lifestyle with the latest electronics, gadgets, and smart devices at unbeatable prices.
+                            {(config.hero_subtitle as string) || 'Upgrade your lifestyle with the latest electronics, gadgets, and smart devices at unbeatable prices.'}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link
@@ -43,7 +65,7 @@ export default async function HomePage() {
                                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-slate-900 font-bold rounded-lg hover:bg-slate-50 transition transform hover:scale-105 shadow-lg"
                             >
                                 <ShoppingBag className="w-5 h-5" />
-                                Shop Now
+                                {(config.hero_cta_text as string) || 'Shop Now'}
                             </Link>
                             <Link
                                 href="/products?featured=true"
@@ -56,8 +78,10 @@ export default async function HomePage() {
                 </div>
             </section>
 
+            <BrandMarquee />
+
             {/* Categories Section - Theme Aware */}
-            <section className="py-16 bg-white dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100">
+            <section className="py-16 bg-white dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 animate-fade-in-up">
                 <div className="container mx-auto px-4">
                     <div className="flex justify-between items-end mb-8">
                         <div>
@@ -86,7 +110,7 @@ export default async function HomePage() {
             </section>
 
             {/* Featured Products Section - Theme Aware */}
-            <section className="py-16 bg-white dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100">
+            <section className="py-16 bg-white dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 <div className="container mx-auto px-4">
                     <div className="flex justify-between items-center mb-8">
                         <h2 className="text-2xl font-bold">Featured Products</h2>
@@ -110,10 +134,11 @@ export default async function HomePage() {
                                 >
                                     <div className="aspect-[4/3] bg-neutral-50 dark:bg-neutral-900 relative overflow-hidden rounded-t-lg">
                                         {product.product_images?.[0] ? (
-                                            <img
+                                            <Image
                                                 src={product.product_images[0].url}
                                                 alt={product.product_images[0].alt_text || product.name}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                fill
+                                                className="object-cover group-hover:scale-110 transition-transform duration-500"
                                             />
                                         ) : (
                                             <div className="absolute inset-0 flex items-center justify-center text-neutral-300 dark:text-neutral-700">
@@ -125,12 +150,16 @@ export default async function HomePage() {
                                                 Featured
                                             </div>
                                         )}
+                                        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <WishlistButton productId={product.id} className="shadow-lg backdrop-blur-md bg-white/50" />
+                                            <CompareButton productId={product.id} className="shadow-lg backdrop-blur-md bg-white/50" />
+                                        </div>
                                     </div>
                                     <div className="p-4 flex-1 flex flex-col">
                                         <h3 className="font-bold mb-1 truncate dark:text-white">{product.name}</h3>
                                         <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-3 line-clamp-2">{product.description}</p>
                                         <div className="flex justify-between items-center mt-auto">
-                                            <span className="font-bold text-blue-600 dark:text-blue-400">${product.base_price.toFixed(2)}</span>
+                                            <span className="font-bold text-blue-600 dark:text-blue-400">{formatPrice(product.base_price)}</span>
                                             <button className="p-2 bg-neutral-100 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white transition">
                                                 <ShoppingBag className="w-4 h-4" />
                                             </button>
@@ -143,8 +172,10 @@ export default async function HomePage() {
                 </div>
             </section>
 
+            <FlashSale />
+
             {/* Features Section - Theme Aware */}
-            <section className="py-16 bg-neutral-50 dark:bg-neutral-950/20 text-neutral-900 dark:text-neutral-100">
+            <section className="py-16 bg-neutral-50 dark:bg-neutral-950/20 text-neutral-900 dark:text-neutral-100 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {features.map((feature) => (
@@ -180,7 +211,7 @@ const features = [
     {
         icon: Truck,
         title: 'Free Shipping',
-        description: 'On all orders over $50',
+        description: 'On all orders over KES 5,000',
     },
     {
         icon: CreditCard,
